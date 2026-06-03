@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Caldaia Remota</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- MQTT -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<style>
+body {
+  font-family: Arial;
+  color: white;
+  text-align: center;
+  margin:0;
+
+  background-image: url('sfondo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.overlay {
+  background: rgba(0,0,0,0.65);
+  min-height: 100vh;
+  padding-bottom: 20px;
+}
+
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  max-width:350px;
+  margin:20px auto;
+}
+
+.card {
+  background:rgba(52,73,94,0.9);
+  padding:15px;
+  border-radius:10px;
+  margin:10px auto;
+  max-width:320px;
+}
+
+.value {
+  font-size:28px;
+  font-weight:bold;
+}
+
+.alta { color:#e74c3c; }
+.bassa { color:#3498db; }
+
+.on { color:#2ecc71; }
+.off { color:#e74c3c; }
+
+input {
+  width:90px;
+  padding:8px;
+  border-radius:5px;
+  border:none;
+  text-align:center;
+  font-size:16px;
+}
+
+button {
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  background:#0984e3;
+  color:white;
+  font-weight:bold;
+}
+
+#clock {
+  color:#00cec9;
+  font-weight:bold;
+}
+
+.wifi-ok {
+  color:#2ecc71;
+  font-weight:bold;
+}
+
+.wifi-off {
+  color:#e74c3c;
+  font-weight:bold;
+}
+
+.soglia-on {
+  color:#e74c3c;
+  font-weight:bold;
+}
+
+.soglia-off {
+  color:#3498db;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+<div class="header">
+  <h2>Caldaia</h2>
+  <div>
+    <div id="clock">--:--:--</div>
+    <div id="wifi">--</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="bassa">Temperatura Bassa</div>
+  <div id="bassa" class="value bassa">--</div>
+</div>
+
+<div class="card">
+  <div class="alta">Temperatura Alta</div>
+  <div id="alta" class="value alta">--</div>
+</div>
+
+<div class="card">
+  <div>Caldaia</div>
+  <div id="caldaia" class="value">--</div>
+</div>
+
+<div class="card">
+  <div class="soglia-on">Soglia ON</div>
+  <input id="on" type="number" step="0.1" value="45">
+
+  <div class="soglia-off" style="margin-top:10px;">Soglia OFF</div>
+  <input id="off" type="number" step="0.1" value="60">
+
+  <br>
+  <button onclick="invia()">Aggiorna</button>
+</div>
+
+</div>
+
+<script>
+
+let inizializzato = false;
+let lastMessageTime = Date.now();
+
+const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+
+client.on('connect', function () {
+  client.subscribe('casa/caldera/dati');
+});
+
+client.on('message', function (topic, message) {
+
+  lastMessageTime = Date.now();
+
+  let d = JSON.parse(message.toString());
+
+  document.getElementById('bassa').innerHTML = d.bassa + " °C";
+  document.getElementById('alta').innerHTML = d.alta + " °C";
+
+  let cal = document.getElementById('caldaia');
+
+  if (d.caldaia == 1) {
+    cal.innerHTML = "ACCESA";
+    cal.className = "value on";
+  } else {
+    cal.innerHTML = "SPENTA";
+    cal.className = "value off";
+  }
+
+  if (!inizializzato) {
+    document.getElementById('on').value = d.on;
+    document.getElementById('off').value = d.off;
+    inizializzato = true;
+  }
+
+});
+
+function invia() {
+  let on = document.getElementById("on").value;
+  let off = document.getElementById("off").value;
+
+  client.publish("casa/caldera/comandi", "ON:" + on);
+  client.publish("casa/caldera/comandi", "OFF:" + off);
+
+  alert("Soglie inviate");
+}
+
+function aggiornaOrologio() {
+  let now = new Date();
+
+  let h = String(now.getHours()).padStart(2, '0');
+  let m = String(now.getMinutes()).padStart(2, '0');
+  let s = String(now.getSeconds()).padStart(2, '0');
+
+  document.getElementById("clock").innerHTML = h + ":" + m + ":" + s;
+}
+
+setInterval(aggiornaOrologio, 1000);
+aggiornaOrologio();
+
+setInterval(function() {
+
+  let now = Date.now();
+  let wifi = document.getElementById("wifi");
+
+  if (now - lastMessageTime < 10000) {
+    wifi.innerHTML = "WiFi connected";
+    wifi.className = "wifi-ok";
+  } else {
+    wifi.innerHTML = "WiFi disconnected";
+    wifi.className = "wifi-off";
+  }
+
+}, 2000);
+
+</script>
+
+</body>
+</html>
