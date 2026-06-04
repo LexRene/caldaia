@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-ia</title><html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Caldaia</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-https://unpkg.com/mqtt/dist/mqtt.min.jsscript>
+<!-- MQTT CORRETTO -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <style>
 body {
@@ -14,7 +18,11 @@ body {
   background-size:cover;
 }
 
-.overlay { background:rgba(0,0,0,0.6); min-height:100vh; }
+.overlay {
+  background:rgba(0,0,0,0.6);
+  min-height:100vh;
+  padding-top:20px;
+}
 
 .card {
   background:rgba(52,73,94,0.9);
@@ -83,7 +91,6 @@ body {
 <br>
 <button onclick="invia()">Aggiorna</button>
 
-<!-- ✅ CONFERMA INVIO -->
 <div id="msg" style="margin-top:8px;font-weight:bold;"></div>
 </div>
 
@@ -91,7 +98,7 @@ body {
 
 <script>
 
-const URL_SCRIPT = "INCOLLA_QUI_URL_GOOGLE";
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzgZ0JfBeYMY_z9dv0axyji20zAjF2tcwkl3mcrG9AVMsC0FLogrzOUq-WWZz1rWM50TA/exec";
 
 let init=false;
 let last=Date.now();
@@ -121,7 +128,7 @@ msg: valore
 }
 
 /* MQTT */
-const client=mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
 client.on('connect',()=>{
 client.subscribe('casa/caldera/dati');
@@ -146,7 +153,6 @@ c.innerHTML="SPENTA";
 c.className="value off";
 }
 
-/* NON toccata */
 if(!init){
 document.getElementById("on").value=d.on;
 document.getElementById("off").value=d.off;
@@ -163,7 +169,6 @@ let off=document.getElementById("off").value;
 client.publish("casa/caldera/comandi","ON:"+on);
 client.publish("casa/caldera/comandi","OFF:"+off);
 
-/* ✅ CONFERMA VISIVA */
 let m=document.getElementById("msg");
 m.innerHTML="Soglie inviate ✅";
 m.style.color="#2ecc71";
@@ -193,5 +198,3 @@ w.className="wifi-off";
 
 </body>
 </html>
-<head>
-<meta charset="UTF-8">
