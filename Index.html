@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Caldaia</title>
+ia</title><html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+https://unpkg.com/mqtt/dist/mqtt.min.jsscript>
 
 <style>
 body {
@@ -44,6 +41,7 @@ body {
 
 <body>
 
+<!-- LOGIN -->
 <div id="loginBox" style="position:fixed;top:0;left:0;width:100%;height:100%;background:black;display:flex;justify-content:center;align-items:center;">
 <div>
 <h2>Login</h2>
@@ -56,6 +54,7 @@ body {
 <div class="overlay">
 
 <h2>Caldaia</h2>
+
 <div id="clock"></div>
 <div id="wifi">--</div>
 
@@ -83,18 +82,21 @@ body {
 
 <br>
 <button onclick="invia()">Aggiorna</button>
+
+<!-- ✅ CONFERMA INVIO -->
+<div id="msg" style="margin-top:8px;font-weight:bold;"></div>
 </div>
 
 </div>
 
 <script>
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzgZ0JfBeYMY_z9dv0axyji20zAjF2tcwkl3mcrG9AVMsC0FLogrzOUq-WWZz1rWM50TA/exec";
+const URL_SCRIPT = "INCOLLA_QUI_URL_GOOGLE";
 
 let init=false;
 let last=Date.now();
 
-// LOGIN
+/* LOGIN */
 function login(){
 let u=document.getElementById("user").value;
 let p=document.getElementById("pass").value;
@@ -102,12 +104,11 @@ let p=document.getElementById("pass").value;
 if(u=="admin" && p=="Rene1979"){
 document.getElementById("loginBox").style.display="none";
 logSistema("accesso",u);
-}else alert("Errore");
+}else alert("Credenziali errate");
 }
 
-// LOG SISTEMA
-function logSistema(tipo, valore=""){
-
+/* LOG GOOGLE */
+function logSistema(tipo,valore=""){
 fetch(URL_SCRIPT,{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -117,13 +118,14 @@ user: valore,
 msg: valore
 })
 });
-
 }
 
-// MQTT
+/* MQTT */
 const client=mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
-client.on('connect',()=>{ client.subscribe('casa/caldera/dati'); });
+client.on('connect',()=>{
+client.subscribe('casa/caldera/dati');
+});
 
 client.on('message',(t,m)=>{
 
@@ -144,6 +146,7 @@ c.innerHTML="SPENTA";
 c.className="value off";
 }
 
+/* NON toccata */
 if(!init){
 document.getElementById("on").value=d.on;
 document.getElementById("off").value=d.off;
@@ -151,21 +154,29 @@ init=true;
 }
 });
 
-// INVIO SOGLIE
+/* INVIO SOGLIE */
 function invia(){
+
 let on=document.getElementById("on").value;
 let off=document.getElementById("off").value;
 
 client.publish("casa/caldera/comandi","ON:"+on);
 client.publish("casa/caldera/comandi","OFF:"+off);
+
+/* ✅ CONFERMA VISIVA */
+let m=document.getElementById("msg");
+m.innerHTML="Soglie inviate ✅";
+m.style.color="#2ecc71";
+
+setTimeout(()=>{ m.innerHTML=""; },3000);
 }
 
-// OROLOGIO
+/* OROLOGIO */
 setInterval(()=>{
 document.getElementById("clock").innerHTML=new Date().toLocaleTimeString();
 },1000);
 
-// WIFI STATUS
+/* WIFI */
 setInterval(()=>{
 let w=document.getElementById("wifi");
 
@@ -182,3 +193,5 @@ w.className="wifi-off";
 
 </body>
 </html>
+<head>
+<meta charset="UTF-8">
